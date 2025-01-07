@@ -427,7 +427,7 @@ function setupWebSocket() {
     const baseUrl = window.location.hostname;
 
     // Create the WebSocket URL using the base URL and port 8765
-    const wsUrl = `ws://${baseUrl}:8765`;
+    const wsUrl = `wss://${baseUrl}:8081/api`;
 
     // Establish the WebSocket connection
     ws = new WebSocket(wsUrl)

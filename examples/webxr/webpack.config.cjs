@@ -18,6 +18,13 @@ module.exports = {
 		client: {
 			overlay: { warnings: false, errors: true },
 		},
+		proxy: [{
+			context: ['/api'],
+			target: 'ws://localhost:8765',
+			secure: false,
+			ws: true,
+			logLevel: 'debug'
+		}],
 	},
 	output: {
 		filename: '[name].bundle.js',
