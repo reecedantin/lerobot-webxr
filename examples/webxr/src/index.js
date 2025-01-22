@@ -253,6 +253,7 @@ let lastControllerPosition = new THREE.Vector3();
 let isSqueezing = false;
 let movingModel = false;
 let controllingRobot = false;
+let motorError = 0.0;
 
 function onFrame(
     delta,
@@ -288,6 +289,16 @@ function onFrame(
                 // Just started squeezing, store initial position
                 isSqueezing = true;
                 lastControllerPosition.copy(currentControllerPosition);
+            }
+
+            try {
+                let hapticValue = motorError / 200.0
+                if (hapticValue > 1.0) {
+                    hapticValue = 1.0
+                }
+                gamepad.getHapticActuator(0).pulse(hapticValue.toFixed(2), 16);
+            } catch (error) {
+                console.log(error);
             }
 
             // Calculate the movement delta in world space
@@ -438,6 +449,13 @@ function setupWebSocket() {
 
     ws.onmessage = function (event) {
         console.log('Message from server:', event.data);
+        const data = JSON.parse(event.data);
+        try {
+            motorError = data.off_target
+        } catch {
+            // do nothing
+            console.log("no off_target")
+        }
     };
 
     ws.onerror = function (error) {
@@ -455,11 +473,11 @@ function sendJointAnglesToRobot() {
         // Get joint angles from sliders
         const jointAngles = {
             Rotation: robot.joints.Rotation.jointValue[0] * -1,
-            Pitch: robot.joints.Pitch.jointValue[0] + Math.PI / 2,
-            Elbow: robot.joints.Elbow.jointValue[0],
+            Pitch: (robot.joints.Pitch.jointValue[0] * -1) - (Math.PI * 3 / 2),
+            Elbow: robot.joints.Elbow.jointValue[0] + Math.PI / 2,
             Wrist_Pitch: robot.joints.Wrist_Pitch.jointValue[0] + Math.PI / 2,
-            Wrist_Roll: robot.joints.Wrist_Roll.jointValue[0] - Math.PI / 2,
-            Jaw: robot.joints.Jaw.jointValue[0],
+            Wrist_Roll: (robot.joints.Wrist_Roll.jointValue[0] * -1) + Math.PI / 2,
+            Jaw: robot.joints.Jaw.jointValue[0] + 0.1,
         };
         console.log(jointAngles);
         // send the joint angles to the websocket
